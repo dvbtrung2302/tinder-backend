@@ -175,7 +175,8 @@ module.exports.uploadPhoto = async (req, res) => {
     const form = new multiparty.Form();
     form.parse(req, async function(err, fields, files) {
       const { photos } = files; 
-      const urls = [];
+      const user = await User.findById(req.user._id);
+      const urls = [...user.photos];
       for (const photo of photos) {
         const uploadResponse = await cloudinary.uploader.upload(photo.path, {});
         urls.push(uploadResponse.url)
@@ -194,6 +195,7 @@ module.exports.uploadPhoto = async (req, res) => {
       const result = await User.findByIdAndUpdate(req.user._id, postData);
       const returnedUser = { ...result._doc };
       delete returnedUser.password;
+      delete returnedUser.photos;
       res.json({
         status: 1,
         message: "Tải ảnh thành công",
