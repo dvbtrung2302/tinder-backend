@@ -19,3 +19,37 @@ BODY: {
   "password": "123456",
 }
 ```
+## Update Profile
+```bash
+PUT: /api/user/update
+HEADER: {
+  Authorization: "Bearer ${token}"
+}
+BODY: {
+  "email": "baotrung23022000@gmail.com",
+  "phone": "0906366223",
+  "area": 10,
+  "gender": 0 | 1
+}
+```
+## Upload Avatar
+```bash
+POST: /api/user/upload-avatar
+HEADER: {
+  Authorization: "Bearer ${token}"
+}
+BODY - FormData: {
+  avatar: File
+}
+```
+
+## Upload Photos
+```bash
+POST: /api/user/upload-photos
+HEADER: {
+  Authorization: "Bearer ${token}"
+}
+BODY - FormData: {
+  photos: Array[Files]
+}
+```

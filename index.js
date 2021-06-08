@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const cloudinary = require('cloudinary').v2;
 
 const productRoute = require('./routes/product.route');
 const userRoute = require('./routes/user.route');
@@ -24,9 +25,14 @@ mongoose.connect(
   }
 );
 
-app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_NAME || "dofqucuyy",
+    api_key: process.env.CLOUDINARY_API_KEY || "734565226587339",
+    api_secret: process.env.CLOUDINARY_API_SECRET || "hcu-UkcU4AQ6LfR_u0UCIDL_Nok",
+});
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use('/products', productRoute);
 app.use('/api/user', userRoute);

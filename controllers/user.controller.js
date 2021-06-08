@@ -1,6 +1,8 @@
 const User = require('../models/user.model');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const cloudinary = require('cloudinary').v2;
+const multiparty = require('multiparty');
 
 module.exports.index = async (req, res) => {
   const user = await User.findById(req.user._id);
@@ -16,20 +18,20 @@ module.exports.signup = async (req, res) => {
   const usernameExist = await User.findOne({ username, username });
   if (username.length < 6 || password.length < 6) {
     return res.json({
-      status: 1,
-      message: "Username and Password must be more than 6 characters"
+      status: 0,
+      message: "Tài Khoản và Mật Khẩu phải có ít nhất 6 ký tự"
     });
   }
   if (usernameExist) {
     return res.json({
-      status: 1,
+      status: 0,
       message: "Username already exists"
     });
   }
   if (password !== confirmPassword) {
     return res.json({
-      status: 1,
-      message: "Password and Confirm Password do not match"
+      status: 0,
+      message: "Mật Khẩu và Xác Nhận Mật Khẩu không trùng khớp"
     })
   }
 
@@ -44,13 +46,13 @@ module.exports.signup = async (req, res) => {
   try {
     await user.save();
     res.json({
-      status: 0,
-      message: "Registered successfully"
+      status: 1,
+      message: "Đăng ký thành công"
     });
   } catch {
     res.json({
-      status: 1,
-      message: "Unknow error"
+      status: 0,
+      message: "Lỗi không xác định"
     });
   }
 }
@@ -64,29 +66,29 @@ module.exports.login = async (req, res) => {
     const user = await User.findOne({ username });
     if (!user) {
       return res.json({
-        status: 1,
-        message: "Username is not found"
+        status: 0,
+        message: "Không tìm thấy tài khoản"
       });
     }
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
       return res.json({
-        status: 1,
-        message: "Invalid password"
+        status: 0,
+        message: "Mật khẩu không chính xác"
       });
     }
     const token = jwt.sign({_id: user._id}, process.env.TOKEN_SECRET || "super_cool_secret");
     const returnedUser = { ...user._doc };
     delete returnedUser.password;
     return res.json({
-      status: 0,
+      status: 1,
       token,
       user: returnedUser
     })
   } catch (error) {
     res.json({
-      status: 1,
-      message: "Unknow error"
+      status: 0,
+      message: "Lỗi không xác định"
     })
   }
 }
@@ -94,9 +96,117 @@ module.exports.login = async (req, res) => {
 module.exports.update = async (req, res) => {
   try {
     const data = req.body;
-    const result = await User.findByIdAndUpdate(req.user._id, data, { new: true });
-    res.status(200).send(result);
+    const {
+      email,
+      phone,
+      area,
+      gender
+    } = data;
+    const postData = {
+      email,
+      phone,
+      area,
+      gender
+    }
+    if (gender !== 1 && gender !== 0) {
+      res.json({
+        status: 0,
+        message: "Giới tính không hợp lệ"
+      })
+      return;
+    }
+    const result = await User.findByIdAndUpdate(req.user._id, postData);
+    const returnedUser = { ...result._doc };
+    delete returnedUser.password;
+    res.json({
+      status: 1,
+      message: "Cập nhật tài khoản thành công",
+      data: {
+        ...returnedUser,
+        ...postData
+      }
+    })
   } catch (err) {
-    res.status(400).send(err);
+    res.json({
+      status: 0,
+      message: "Cập nhật tài khoản thất bại",
+    })
+  }
+}
+
+module.exports.uploadAvatar = async (req, res) => {
+  try {
+    const form = new multiparty.Form();
+    form.parse(req, async function(err, fields, files) {
+      const { avatar } = files; 
+      const uploadResponse = await cloudinary.uploader.upload(avatar[0].path, {});
+      if (uploadResponse.url) {
+        const postData = {
+          avatar: uploadResponse.url
+        }
+        const result = await User.findByIdAndUpdate(req.user._id, postData);
+        const returnedUser = { ...result._doc };
+        delete returnedUser.password;
+        res.json({
+          status: 1,
+          message: "Cập nhật ảnh đại diện thành công",
+          data: {
+            ...returnedUser,
+            ...postData
+          }
+        })
+      } else {
+        res.json({
+          status: 0,
+          message: "Cập nhật ảnh đại diện thất bại",
+        })
+      }
+    });
+  } catch (err) {
+    res.json({
+      status: 0,
+      message: "Cập nhật ảnh đại diện thất bại",
+    })
+  }
+}
+
+module.exports.uploadPhoto = async (req, res) => {
+  try {
+    const form = new multiparty.Form();
+    form.parse(req, async function(err, fields, files) {
+      const { photos } = files; 
+      const urls = [];
+      for (const photo of photos) {
+        const uploadResponse = await cloudinary.uploader.upload(photo.path, {});
+        urls.push(uploadResponse.url)
+      }
+
+      if (!urls.length) {
+        res.json({
+          status: 0,
+          message: "Tải ảnh thất bại",
+        })
+        return;
+      } 
+      const postData = {
+        photos: urls
+      }
+      const result = await User.findByIdAndUpdate(req.user._id, postData);
+      const returnedUser = { ...result._doc };
+      delete returnedUser.password;
+      res.json({
+        status: 1,
+        message: "Tải ảnh thành công",
+        data: {
+          ...returnedUser,
+          ...postData
+        }
+      })
+    });
+  } catch (err) {
+    res.json({
+      status: 0,
+      message: "Tải ảnh thất bại",
+    })
   }
 }

@@ -10,6 +10,10 @@ router.post('/signup', controller.signup);
 
 router.post('/login', controller.login);
 
-router.patch('/update', middleware.verifyToken, controller.update);
+router.put('/update', middleware.verifyToken, controller.update);
+
+router.post('/upload-avatar', middleware.verifyToken, controller.uploadAvatar)
+
+router.post('/upload-photos', middleware.verifyToken, controller.uploadPhoto);
 
 module.exports = router;
