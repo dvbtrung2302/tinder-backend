@@ -108,7 +108,7 @@ module.exports.update = async (req, res) => {
       area,
       gender
     }
-    if (gender !== 1 && gender !== 0) {
+    if (parseInt(gender) !== 1 && parseInt(gender) !== 0) {
       res.json({
         status: 0,
         message: "Giới tính không hợp lệ"
