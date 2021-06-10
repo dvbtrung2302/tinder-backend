@@ -5,8 +5,27 @@ const cloudinary = require('cloudinary').v2;
 const multiparty = require('multiparty');
 
 module.exports.index = async (req, res) => {
-  const user = await User.findById(req.user._id);
-  res.json(user);
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.json({
+        status: 0,
+        message: "Không tìm thấy người dùng"
+      });
+    }
+    const returnedUser = { ...user._doc };
+    delete returnedUser.password;
+    res.json({
+      status: 1,
+      message: "Thành công",
+      data: returnedUser
+    });
+  } catch (error) {
+    return res.json({
+      status: 0,
+      message: "Không tìm thấy người dùng"
+    });
+  }
 }
 
 module.exports.signup = async (req, res) => {
@@ -100,20 +119,25 @@ module.exports.update = async (req, res) => {
       email,
       phone,
       area,
-      gender
+      gender,
+      address,
+      bio
     } = data;
-    const postData = {
-      email,
-      phone,
-      area,
-      gender
-    }
-    if (parseInt(gender) !== 1 && parseInt(gender) !== 0) {
+    if (gender !== null && gender !== undefined && parseInt(gender) !== 1 && parseInt(gender)!== 0) {
       res.json({
         status: 0,
         message: "Giới tính không hợp lệ"
       })
       return;
+    }
+    const user = await User.findById(req.user._id);
+    const postData = {
+      email: email || user.email,
+      phone: phone || user.phone,
+      area: (area !== undefined && area !== null) ? parseInt(area) : user.area,
+      gender: (gender !== undefined && gender !== null) ? parseInt(gender) : user.gender,
+      address: address || user.address,
+      bio: bio || user.bio
     }
     const result = await User.findByIdAndUpdate(req.user._id, postData);
     const returnedUser = { ...result._doc };
@@ -127,6 +151,7 @@ module.exports.update = async (req, res) => {
       }
     })
   } catch (err) {
+    console.log(err);
     res.json({
       status: 0,
       message: "Cập nhật tài khoản thất bại",

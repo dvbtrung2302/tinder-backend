@@ -10,6 +10,8 @@ const userSchema = new mongoose.Schema({
   gender: Number,
   hobbies: Array,
   area: Number,
+  bio: String,
+  address: String,
 });
 
 const User = mongoose.model('User', userSchema);

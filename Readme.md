@@ -19,6 +19,13 @@ BODY: {
   "password": "123456",
 }
 ```
+## Get profile
+```bash
+GET: /api/user
+HEADER: {
+  Authorization: "Bearer ${token}"
+}
+```
 ## Update Profile
 ```bash
 PUT: /api/user/update
@@ -29,7 +36,9 @@ BODY: {
   "email": "baotrung23022000@gmail.com",
   "phone": "0906366223",
   "area": 10,
-  "gender": 0 | 1
+  "gender": 0 | 1,
+  "bio": "Hút thuốc khi buồn",
+  "address": "ở đâu còn lâu mới nói"
 }
 ```
 ## Upload Avatar
