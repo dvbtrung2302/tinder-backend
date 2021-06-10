@@ -25,7 +25,7 @@ module.exports.signup = async (req, res) => {
   if (usernameExist) {
     return res.json({
       status: 0,
-      message: "Username already exists"
+      message: "Tài khoản đã có người đăng ký"
     });
   }
   if (password !== confirmPassword) {
@@ -77,7 +77,7 @@ module.exports.login = async (req, res) => {
         message: "Mật khẩu không chính xác"
       });
     }
-    const token = jwt.sign({_id: user._id}, process.env.TOKEN_SECRET || "super_cool_secret");
+    const token = jwt.sign({_id: user._id}, process.env.TOKEN_SECRET || "super_cool_secret", {});
     const returnedUser = { ...user._doc };
     delete returnedUser.password;
     return res.json({
