@@ -62,3 +62,16 @@ BODY - FormData: {
   photos: Array[Files]
 }
 ```
+
+## Swipe Matching
+```bash
+SOCKET: socket.emit("like-user", {
+  token: "abcxyz",
+  userId: "abcxyz"
+})
+```
+
+## Swipe Matching Response
+```bash
+SOCKET: socket.on("like-user-response", (data) => {})
+```

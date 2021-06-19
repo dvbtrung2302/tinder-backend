@@ -12,6 +12,8 @@ const userSchema = new mongoose.Schema({
   area: Number,
   bio: String,
   address: String,
+  matching_list: Array,
+  matched_list: Array,
 });
 
 const User = mongoose.model('User', userSchema);

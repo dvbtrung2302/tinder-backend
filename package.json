@@ -21,6 +21,7 @@
     "moment": "^2.24.0",
     "mongoose": "^5.9.7",
     "multiparty": "^4.2.2",
+    "socket.io": "^4.1.2",
     "stripe": "^8.46.0",
     "uuid": "^7.0.3"
   },

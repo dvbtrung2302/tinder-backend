@@ -56,10 +56,9 @@ module.exports.signup = async (req, res) => {
 
   const salt = await bcrypt.genSalt(10);
   const hashPassword = await bcrypt.hash(password, salt);
-
   const user = new User({
     username,
-    password: hashPassword
+    password: hashPassword,
   })
 
   try {
@@ -97,14 +96,30 @@ module.exports.login = async (req, res) => {
       });
     }
     const token = jwt.sign({_id: user._id}, process.env.TOKEN_SECRET || "super_cool_secret", {});
+    const users = await User.find({});
+    
+    const canMatchingList = users
+    .map(item => {
+      const tempItem = { ...item._doc }
+      delete tempItem.password;
+      return tempItem
+    })
+    .filter(item => item._id.toString() !== user._id.toString());
+    let filtedCanMatchingList = canMatchingList;
+    if (user.matching_list && user.matching_list.length) {
+      filtedCanMatchingList = canMatchingList.filter(({_id}) => !user.matching_list.find((element) => element.toString() === _id.toString()));
+    }
+    
     const returnedUser = { ...user._doc };
     delete returnedUser.password;
     return res.json({
       status: 1,
       token,
-      user: returnedUser
+      user: returnedUser,
+      can_matching_list: filtedCanMatchingList
     })
   } catch (error) {
+    console.log(error);
     res.json({
       status: 0,
       message: "Lỗi không xác định"
