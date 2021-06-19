@@ -100,6 +100,7 @@ io.on('connection', (socket) => {
         ]})
         return;
       }
+      
       socket.emit("like-user-response", {
         status: 1,
         message: "Thích người này thành công"
