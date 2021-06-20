@@ -73,6 +73,13 @@ io.on('connection', (socket) => {
     const verified = jwt.verify(token, process.env.TOKEN_SECRET || "super_cool_secret");
     const user = await User.findById(verified._id);
     const targetUser = await User.findById(userId);
+    if (!targetUser) {
+      socket.emit("like-user-response", {
+        status: 0,
+        message: "Không tìm thấy người bạn thích"
+      })
+      return;
+    }
     if (user) {
       if (user.matched_list.includes(userId)) {
         socket.emit("like-user-response", {
@@ -90,13 +97,17 @@ io.on('connection', (socket) => {
           status: 1,
           message: "Hai bạn đã thích nhau"
         })
+        const verifiedUser = { ...user._doc };
+        const verifiedTargetUser = { ...targetUser._doc };
+        delete verifiedUser.pasword;
+        delete verifiedTargetUser.pasword;
         await User.findByIdAndUpdate(verified._id, {matching_list: [
           ...user.matching_list,
-          userId
+          verifiedTargetUser
         ]})
         await User.findByIdAndUpdate(userId, {matching_list: [
           ...targetUser.matching_list,
-          verified._id
+          verifiedUser
         ]})
         return;
       }
@@ -106,7 +117,6 @@ io.on('connection', (socket) => {
         message: "Thích người này thành công"
       })
     }
-    console.log(user, targetUser);
   })
   // disconnect
   socket.on('disconnect', () => {

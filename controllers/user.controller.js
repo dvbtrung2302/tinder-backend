@@ -133,6 +133,7 @@ module.exports.update = async (req, res) => {
     const {
       email,
       phone,
+      full_name,
       area,
       gender,
       address,
@@ -149,6 +150,7 @@ module.exports.update = async (req, res) => {
     const postData = {
       email: email || user.email,
       phone: phone || user.phone,
+      full_name: full_name || user.full_name,
       area: (area !== undefined && area !== null) ? parseInt(area) : user.area,
       gender: (gender !== undefined && gender !== null) ? parseInt(gender) : user.gender,
       address: address || user.address,
