@@ -59,8 +59,15 @@ app.use('/promotion', promotionRoute);
 
 app.get('/', (req, res) => res.send('Hello World!'))
 
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
   console.log('a user connected');
+  // join
+  socket.on("join", async ({token, userId}) => {
+    const verified = jwt.verify(token, process.env.TOKEN_SECRET || "super_cool_secret");
+    const unique = [verified._id.toString(), userId.toString()].sort((a, b) => (a < b ? -1 : 1));
+    const roomId = `${unique[0]}-${unique[1]}`;
+    socket.join(roomId);
+  })
   // matching
   socket.on("like-user", async ({token, userId}) => {
     if (!token) {
@@ -70,6 +77,7 @@ io.on('connection', (socket) => {
       })
       return;
     }
+
     const verified = jwt.verify(token, process.env.TOKEN_SECRET || "super_cool_secret");
     const user = await User.findById(verified._id);
     const targetUser = await User.findById(userId);
@@ -93,17 +101,10 @@ io.on('connection', (socket) => {
         userId
       ]})
       if (targetUser.matched_list.includes(verified._id)) {
-        io.sockets.emit("like-user-response", {
-          status: 1,
-          message: "Hai bạn đã thích nhau"
-        })
         const verifiedUser = { ...user._doc };
         const verifiedTargetUser = { ...targetUser._doc };
-        const roomId = new Date().valueOf();
-        verifiedUser.room_id = roomId;
-        verifiedTargetUser.room_id = roomId;
-        delete verifiedUser.pasword;
-        delete verifiedTargetUser.pasword;
+        delete verifiedUser.password;
+        delete verifiedTargetUser.password;
         await User.findByIdAndUpdate(verified._id, {matching_list: [
           ...user.matching_list,
           verifiedTargetUser
@@ -111,8 +112,32 @@ io.on('connection', (socket) => {
         await User.findByIdAndUpdate(userId, {matching_list: [
           ...targetUser.matching_list,
           verifiedUser
-        ]})
+        ]}) 
+        const unique = [verified._id.toString(), userId.toString()].sort((a, b) => (a < b ? -1 : 1));
+        const roomId = `${unique[0]}-${unique[1]}`;
+        socket.join(roomId);
+
+        socket.emit("like-user-response", {
+          status: 1,
+          message: "Đã tìm thấy người phù hợp",
+          data: [
+            ...user.matching_list,
+            verifiedTargetUser
+          ]
+        })
+        socket.broadcast.to(roomId).emit("like-user-response", {
+          status: 1,
+          message: "Đã tìm thấy người phù hợp",
+          data: [
+            ...targetUser.matching_list,
+            verifiedUser
+          ]
+        })
         return;
+      } else  {
+        const unique = [verified._id.toString(), userId.toString()].sort((a, b) => (a < b ? -1 : 1));
+        const roomId = `${unique[0]}-${unique[1]}`;
+        socket.join(roomId);
       }
       
       socket.emit("like-user-response", {
@@ -122,7 +147,7 @@ io.on('connection', (socket) => {
     }
   })
   // chat
-  socket.on("send-message", async ({token, roomId, message}) => {
+  socket.on("send-message", async ({token, userId, message}) => {
     if (!token) {
       socket.emit("send-message-response", {
         status: 0,
@@ -130,10 +155,10 @@ io.on('connection', (socket) => {
       })
       return;
     }
-    if (!roomId) {
+    if (!userId) {
       socket.emit("send-message-response", {
         status: 0,
-        message: "Thiếu RoomId"
+        message: "Thiếu UserId"
       })
       return;
     }
@@ -148,15 +173,18 @@ io.on('connection', (socket) => {
     const user = await User.findById(verified._id);
     const verifiedUser = { ...user._doc };
     delete verifiedUser.password;
+    
+    const unique = [verified._id.toString(), userId.toString()].sort((a, b) => (a < b ? -1 : 1));
+    const roomId = `${unique[0]}-${unique[1]}`;
 
     const data = new Chat({
       message,
       created_at: new Date(),
       user_post: verifiedUser,
-      room_id: roomId.toString()
+      room_id: roomId
     })
     await data.save();
-    io.sockets.emit("send-message-response", {
+    io.sockets.in(roomId).emit("send-message-response", {
       status: 1,
       message: "Nhắn tin thành công",
       data: data

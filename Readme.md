@@ -78,17 +78,24 @@ SOCKET: socket.on("like-user-response", (data) => {})
 
 ## Get All Messages
 ```bash
-GET: /api/chat?roomId=abcxyz
+GET: /api/chat?userId=abcxyz
 HEADER: {
   Authorization: "Bearer ${token}"
 }
 ```
 
+## Join
+```bash
+SOCKET: socket.emit("join", {
+  token: "abcxyz",
+  userId: "abcxyz",
+})
+```
 ## Chat
 ```bash
 SOCKET: socket.emit("send-message", {
   token: "abcxyz",
-  roomId: "abcxyz",
+  userId: "abcxyz",
   message: "abcxyz
 })
 ```

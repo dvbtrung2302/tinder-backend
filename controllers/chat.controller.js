@@ -3,13 +3,15 @@ const Chat = require('../models/chat.model');
 module.exports.index = async (req, res) => {
   try {
     const userId = req.user._id.toString();
-    const roomId = req.query.roomId;
-    if (!roomId) {
+    const targetUserId = req.query.userId;
+    if (!targetUserId) {
       return res.json({
         status: 0,
-        message: "RoomId không hợp lệ"
+        message: "UserId không hợp lệ"
       });
     } 
+    const unique = [userId.toString(), targetUserId.toString()].sort((a, b) => (a < b ? -1 : 1));
+    const roomId = `${unique[0]}-${unique[1]}`;
     
     const messages = await Chat.find({ room_id: roomId })
    
