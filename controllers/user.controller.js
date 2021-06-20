@@ -115,8 +115,10 @@ module.exports.login = async (req, res) => {
     return res.json({
       status: 1,
       token,
-      user: returnedUser,
-      can_matching_list: filtedCanMatchingList
+      user: {
+        ...returnedUser,
+        can_matching_list: filtedCanMatchingList
+      },
     })
   } catch (error) {
     console.log(error);

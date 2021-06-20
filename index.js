@@ -8,23 +8,21 @@ const cloudinary = require('cloudinary').v2;
 
 const productRoute = require('./routes/product.route');
 const userRoute = require('./routes/user.route');
+const chatRoute = require('./routes/chat.route');
 const checkoutRoute = require('./routes/checkout.route');
 const orderRoute = require('./routes/order.route');
 const adminRoute = require('./routes/admin.route');
 const promotionRoute = require('./routes/promotion.route');
 
 const app = express();
-app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
+app.use(cors());
 const port = process.env.PORT || 8000;
 // sockert io
 const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const User = require('./models/user.model');
+const Chat = require('./models/chat.model');
 const io = new Server(server, {
   cors: {
     origin: '*',
@@ -52,6 +50,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/products', productRoute);
 app.use('/api/user', userRoute);
+app.use('/api/chat', chatRoute);
 app.use('/checkout', checkoutRoute);
 app.use('/order', orderRoute);
 app.use('/admin', adminRoute);
@@ -62,6 +61,7 @@ app.get('/', (req, res) => res.send('Hello World!'))
 
 io.on('connection', (socket) => {
   console.log('a user connected');
+  // matching
   socket.on("like-user", async ({token, userId}) => {
     if (!token) {
       socket.emit("like-user-response", {
@@ -93,12 +93,15 @@ io.on('connection', (socket) => {
         userId
       ]})
       if (targetUser.matched_list.includes(verified._id)) {
-        socket.emit("like-user-response", {
+        io.sockets.emit("like-user-response", {
           status: 1,
           message: "Hai bạn đã thích nhau"
         })
         const verifiedUser = { ...user._doc };
         const verifiedTargetUser = { ...targetUser._doc };
+        const roomId = new Date().valueOf();
+        verifiedUser.room_id = roomId;
+        verifiedTargetUser.room_id = roomId;
         delete verifiedUser.pasword;
         delete verifiedTargetUser.pasword;
         await User.findByIdAndUpdate(verified._id, {matching_list: [
@@ -117,6 +120,47 @@ io.on('connection', (socket) => {
         message: "Thích người này thành công"
       })
     }
+  })
+  // chat
+  socket.on("send-message", async ({token, roomId, message}) => {
+    if (!token) {
+      socket.emit("send-message-response", {
+        status: 0,
+        message: "Thiếu token"
+      })
+      return;
+    }
+    if (!roomId) {
+      socket.emit("send-message-response", {
+        status: 0,
+        message: "Thiếu RoomId"
+      })
+      return;
+    }
+    if (!message.trim()) {
+      socket.emit("send-message-response", {
+        status: 0,
+        message: "Thiếu tin nhắn"
+      })
+      return;
+    }
+    const verified = jwt.verify(token, process.env.TOKEN_SECRET || "super_cool_secret");
+    const user = await User.findById(verified._id);
+    const verifiedUser = { ...user._doc };
+    delete verifiedUser.password;
+
+    const data = new Chat({
+      message,
+      created_at: new Date(),
+      user_post: verifiedUser,
+      room_id: roomId.toString()
+    })
+    await data.save();
+    io.sockets.emit("send-message-response", {
+      status: 1,
+      message: "Nhắn tin thành công",
+      data: data
+    })
   })
   // disconnect
   socket.on('disconnect', () => {

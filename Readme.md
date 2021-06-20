@@ -75,3 +75,17 @@ SOCKET: socket.emit("like-user", {
 ```bash
 SOCKET: socket.on("like-user-response", (data) => {})
 ```
+
+## Chat
+```bash
+SOCKET: socket.emit("send-message", {
+  token: "abcxyz",
+  roomId: "abcxyz",
+  message: "abcxyz
+})
+```
+
+## Swipe Matching Response
+```bash
+SOCKET: socket.on("send-message-response", (data) => {})
+```
