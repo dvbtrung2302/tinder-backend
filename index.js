@@ -188,6 +188,7 @@ io.on('connection', async (socket) => {
       room_id: roomId
     })
     await data.save();
+    console.log(roomId);
     io.sockets.in(roomId).emit("send-message-response", {
       status: 1,
       message: "Nhắn tin thành công",
