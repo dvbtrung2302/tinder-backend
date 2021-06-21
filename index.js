@@ -69,7 +69,7 @@ io.on('connection', async (socket) => {
     socket.join(roomId);
     socket.emit("join-response", {
       status: 1,
-      message: "Join thành công",
+      message: `Join room ${roomId} thành công`,
     })
   })
   // matching
