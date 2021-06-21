@@ -32,8 +32,15 @@ module.exports.signup = async (req, res) => {
   const {
     username,
     password,
+    full_name,
     confirmPassword
   } = req.body;
+  if (!username || !password || !full_name || !confirmPassword) {
+    return res.json({
+      status: 0,
+      message: "Thiếu thông tin"
+    });
+  }
   const usernameExist = await User.findOne({ username, username });
   if (username.length < 6 || password.length < 6) {
     return res.json({
@@ -58,6 +65,7 @@ module.exports.signup = async (req, res) => {
   const hashPassword = await bcrypt.hash(password, salt);
   const user = new User({
     username,
+    full_name,
     password: hashPassword,
   })
 

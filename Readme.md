@@ -8,6 +8,7 @@ POST: /api/user/signup
 BODY: {
   "username": "abcxyz",
   "password": "123456",
+  "full_name": "abcxyz",
   "confirmPassword": "123456"
 }
 ```
