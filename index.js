@@ -71,6 +71,49 @@ io.on('connection', async (socket) => {
       status: 1,
       message: `Join room ${roomId} thành công`,
     })
+    socket.on("send-message", async ({token, userId, message}) => {
+      if (!token) {
+        socket.emit("send-message-response", {
+          status: 0,
+          message: "Thiếu token"
+        })
+        return;
+      }
+      if (!userId) {
+        socket.emit("send-message-response", {
+          status: 0,
+          message: "Thiếu UserId"
+        })
+        return;
+      }
+      if (!message.trim()) {
+        socket.emit("send-message-response", {
+          status: 0,
+          message: "Thiếu tin nhắn"
+        })
+        return;
+      }
+      const verified = jwt.verify(token, process.env.TOKEN_SECRET || "super_cool_secret");
+      const user = await User.findById(verified._id);
+      const verifiedUser = { ...user._doc };
+      delete verifiedUser.password;
+      
+      const unique = [verified._id.toString(), userId.toString()].sort((a, b) => (a < b ? -1 : 1));
+      const roomId = `${unique[0]}-${unique[1]}`;
+  
+      const data = new Chat({
+        message,
+        created_at: new Date(),
+        user_post: verifiedUser,
+        room_id: roomId
+      })
+      await data.save();
+      io.sockets.in(roomId).emit("send-message-response", {
+        status: 1,
+        message: "Nhắn tin thành công",
+        data: data
+      })
+    })
   })
   // matching
   socket.on("like-user", async ({token, userId}) => {
@@ -151,50 +194,6 @@ io.on('connection', async (socket) => {
     }
   })
   // chat
-  socket.on("send-message", async ({token, userId, message}) => {
-    if (!token) {
-      socket.emit("send-message-response", {
-        status: 0,
-        message: "Thiếu token"
-      })
-      return;
-    }
-    if (!userId) {
-      socket.emit("send-message-response", {
-        status: 0,
-        message: "Thiếu UserId"
-      })
-      return;
-    }
-    if (!message.trim()) {
-      socket.emit("send-message-response", {
-        status: 0,
-        message: "Thiếu tin nhắn"
-      })
-      return;
-    }
-    const verified = jwt.verify(token, process.env.TOKEN_SECRET || "super_cool_secret");
-    const user = await User.findById(verified._id);
-    const verifiedUser = { ...user._doc };
-    delete verifiedUser.password;
-    
-    const unique = [verified._id.toString(), userId.toString()].sort((a, b) => (a < b ? -1 : 1));
-    const roomId = `${unique[0]}-${unique[1]}`;
-
-    const data = new Chat({
-      message,
-      created_at: new Date(),
-      user_post: verifiedUser,
-      room_id: roomId
-    })
-    await data.save();
-    console.log(roomId);
-    io.sockets.in(roomId).emit("send-message-response", {
-      status: 1,
-      message: "Nhắn tin thành công",
-      data: data
-    })
-  })
   // disconnect
   socket.on('disconnect', () => {
     console.log('user disconnected');
