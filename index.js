@@ -67,6 +67,10 @@ io.on('connection', async (socket) => {
     const unique = [verified._id.toString(), userId.toString()].sort((a, b) => (a < b ? -1 : 1));
     const roomId = `${unique[0]}-${unique[1]}`;
     socket.join(roomId);
+    socket.emit("join-response", {
+      status: 1,
+      message: "Join thành công",
+    })
   })
   // matching
   socket.on("like-user", async ({token, userId}) => {
