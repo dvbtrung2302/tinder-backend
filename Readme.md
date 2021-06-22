@@ -39,7 +39,8 @@ BODY: {
   "area": 10,
   "gender": 0 | 1,
   "bio": "Hút thuốc khi buồn",
-  "address": "ở đâu còn lâu mới nói"
+  "address": "ở đâu còn lâu mới nói",
+  "hobbies": ["id"]
 }
 ```
 ## Upload Avatar
