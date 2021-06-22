@@ -63,6 +63,16 @@ BODY - FormData: {
   photos: Array[Files]
 }
 ```
+## Delete Photo
+```bash
+POST: /api/user/delete-photo
+HEADER: {
+  Authorization: "Bearer ${token}"
+}
+BODY: {
+  "photo": "abcxyz"
+}
+```
 
 ## Swipe Matching
 ```bash
@@ -104,4 +114,11 @@ SOCKET: socket.emit("send-message", {
 ## Swipe Matching Response
 ```bash
 SOCKET: socket.on("send-message-response", (data) => {})
+```
+## Get All Hobbies
+```bash
+GET: /api/hobby
+HEADER: {
+  Authorization: "Bearer ${token}"
+}
 ```

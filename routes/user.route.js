@@ -16,4 +16,6 @@ router.post('/upload-avatar', middleware.verifyToken, controller.uploadAvatar)
 
 router.post('/upload-photos', middleware.verifyToken, controller.uploadPhoto);
 
+router.post('/delete-photo', middleware.verifyToken, controller.deletePhoto);
+
 module.exports = router;

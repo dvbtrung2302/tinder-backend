@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cloudinary = require('cloudinary').v2;
 const multiparty = require('multiparty');
+const Chat = require('../models/chat.model');
 
 module.exports.index = async (req, res) => {
   try {
@@ -117,9 +118,11 @@ module.exports.login = async (req, res) => {
     if (user.matching_list && user.matching_list.length) {
       filtedCanMatchingList = canMatchingList.filter(({_id}) => !user.matching_list.find((element) => element.toString() === _id.toString()));
     }
-    
+
+
     const returnedUser = { ...user._doc };
     delete returnedUser.password;
+
     return res.json({
       status: 1,
       token,
@@ -146,6 +149,7 @@ module.exports.update = async (req, res) => {
       full_name,
       area,
       gender,
+      hobbies,
       address,
       bio
     } = data;
@@ -164,9 +168,10 @@ module.exports.update = async (req, res) => {
       area: (area !== undefined && area !== null) ? parseInt(area) : user.area,
       gender: (gender !== undefined && gender !== null) ? parseInt(gender) : user.gender,
       address: address || user.address,
-      bio: bio || user.bio
+      bio: bio || user.bio,
+      hobbies: hobbies || user.hobbies
     }
-    const result = await User.findByIdAndUpdate(req.user._id, postData);
+    const result = await User.findByIdAndUpdate(req.user._id, postData, {new: true});
     const returnedUser = { ...result._doc };
     delete returnedUser.password;
     res.json({
@@ -196,7 +201,7 @@ module.exports.uploadAvatar = async (req, res) => {
         const postData = {
           avatar: uploadResponse.url
         }
-        const result = await User.findByIdAndUpdate(req.user._id, postData);
+        const result = await User.findByIdAndUpdate(req.user._id, postData, {new: true});
         const returnedUser = { ...result._doc };
         delete returnedUser.password;
         res.json({
@@ -244,7 +249,7 @@ module.exports.uploadPhoto = async (req, res) => {
       const postData = {
         photos: urls
       }
-      const result = await User.findByIdAndUpdate(req.user._id, postData);
+      const result = await User.findByIdAndUpdate(req.user._id, postData, {new: true});
       const returnedUser = { ...result._doc };
       delete returnedUser.password;
       delete returnedUser.photos;
@@ -261,6 +266,52 @@ module.exports.uploadPhoto = async (req, res) => {
     res.json({
       status: 0,
       message: "Tải ảnh thất bại",
+    })
+  }
+}
+
+module.exports.deletePhoto = async (req, res) => {
+  try {
+    const { photo } = req.body;
+    if (!photo) {
+      res.json({
+        status: 0,
+        message: "Thiếu dữ liệu",
+      })
+      return;
+    }
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      res.json({
+        status: 0,
+        message: "Không tìm thấy người dùng",
+      })
+      return;
+    }
+    const urls = [...user.photos];
+    const index = urls.findIndex(url => url === photo);
+    if (index !== -1) {
+      urls.splice(index, 1);
+      const postData = {
+        photos: urls
+      }
+      const result = await User.findByIdAndUpdate(req.user._id, postData, {new: true});
+      const returnedUser = { ...result._doc };
+      delete returnedUser.password;
+      return res.json({
+        status: 1,
+        message: "Xóa ảnh thành công",
+        data: returnedUser
+      })
+    } 
+    return res.json({
+      status: 0,
+      message: "Không tìm thấy ảnh",
+    })
+  } catch (error) {
+    res.json({
+      status: 0,
+      message: "Xóa ảnh thất bại",
     })
   }
 }

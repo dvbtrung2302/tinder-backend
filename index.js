@@ -9,6 +9,7 @@ const cloudinary = require('cloudinary').v2;
 const productRoute = require('./routes/product.route');
 const userRoute = require('./routes/user.route');
 const chatRoute = require('./routes/chat.route');
+const hobbyRoute = require('./routes/hobby.route');
 const checkoutRoute = require('./routes/checkout.route');
 const orderRoute = require('./routes/order.route');
 const adminRoute = require('./routes/admin.route');
@@ -51,6 +52,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/products', productRoute);
 app.use('/api/user', userRoute);
 app.use('/api/chat', chatRoute);
+app.use('/api/hobby', hobbyRoute);
 app.use('/checkout', checkoutRoute);
 app.use('/order', orderRoute);
 app.use('/admin', adminRoute);
@@ -188,7 +190,6 @@ io.on('connection', async (socket) => {
       room_id: roomId
     })
     await data.save();
-    console.log(roomId);
     io.sockets.in(roomId).emit("send-message-response", {
       status: 1,
       message: "Nhắn tin thành công",
