@@ -422,3 +422,54 @@ module.exports.getCanMatchingList = async (req, res) => {
     })
   }
 }
+
+module.exports.changePassword = async (req, res) => {
+  try {
+    const {
+      old_password,
+      new_password,
+      confirm_password
+    } = req.body;
+    if (!old_password || !new_password || !confirm_password) {
+      return res.json({
+        status: 0,
+        message: "Thiếu thông tin"
+      })
+    } 
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.json({
+        status: 0,
+        message: "Không tìm thấy tài khoản"
+      });
+    }
+    const validPassword = await bcrypt.compare(old_password, user.password);
+    if (!validPassword) {
+      return res.json({
+        status: 0,
+        message: "Mật khẩu cũ không chính xác"
+      });
+    }
+    if (new_password !== confirm_password) {
+      return res.json({
+        status: 0,
+        message: "Mật Khẩu Mới và Xác Nhận Mật Khẩu Mới không trùng khớp"
+      })
+    }
+    const salt = await bcrypt.genSalt(10);
+    const hashPassword = await bcrypt.hash(new_password, salt);
+    const postData = {
+      password: hashPassword
+    }
+    await User.findByIdAndUpdate(req.user._id, postData, {new: true})
+    return res.json({
+      status: 1,
+      message: "Đổi mật khẩu thành công"
+    })
+  } catch (error) {
+    res.json({
+      status: 0,
+      message: "Đổi mật khẩu thất bại"
+    })
+  }
+}

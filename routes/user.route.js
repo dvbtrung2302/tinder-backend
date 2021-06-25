@@ -22,4 +22,6 @@ router.post('/delete-photo', middleware.verifyToken, controller.deletePhoto);
 
 router.get('/can-matching-list', middleware.verifyToken, controller.getCanMatchingList);
 
+router.post('/change-password', middleware.verifyToken, controller.changePassword);
+
 module.exports = router;

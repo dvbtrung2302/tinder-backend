@@ -48,6 +48,18 @@ BODY: {
   "hobbies": ["id"]
 }
 ```
+## Change Password
+```bash
+POST: /api/user/change-password
+HEADER: {
+  Authorization: "Bearer ${token}"
+}
+BODY: {
+  "old_password": "123456",
+  "new_password": "1234567",
+  "confirm_password": "1234567",
+}
+```
 ## Upload Avatar
 ```bash
 POST: /api/user/upload-avatar

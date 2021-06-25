@@ -6,14 +6,9 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
 
-const productRoute = require('./routes/product.route');
 const userRoute = require('./routes/user.route');
 const chatRoute = require('./routes/chat.route');
 const hobbyRoute = require('./routes/hobby.route');
-const checkoutRoute = require('./routes/checkout.route');
-const orderRoute = require('./routes/order.route');
-const adminRoute = require('./routes/admin.route');
-const promotionRoute = require('./routes/promotion.route');
 
 const app = express();
 app.use(cors());
@@ -49,15 +44,9 @@ cloudinary.config({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use('/products', productRoute);
 app.use('/api/user', userRoute);
 app.use('/api/chat', chatRoute);
 app.use('/api/hobby', hobbyRoute);
-app.use('/checkout', checkoutRoute);
-app.use('/order', orderRoute);
-app.use('/admin', adminRoute);
-app.use('/promotion', promotionRoute);
-
 
 app.get('/', (req, res) => res.send('Hello World!'))
 
