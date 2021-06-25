@@ -399,11 +399,12 @@ module.exports.getCanMatchingList = async (req, res) => {
       ));
     const returnedMatchingList = [];
     if (canMatchingList && canMatchingList.length) {
-      for (let hobby of user.hobbies) {
-        for (let user of canMatchingList) {
+      for (let canMatchingUser of canMatchingList) {
+        for (let hobby of canMatchingUser.hobbies) {
           const index = user.hobbies.findIndex(item => item._id.toString() === hobby._id.toString())
           if (index !== -1) {
-            returnedMatchingList.push(user)
+            returnedMatchingList.push(canMatchingUser);
+            break;
           }
         }
       }

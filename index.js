@@ -64,14 +64,18 @@ app.get('/', (req, res) => res.send('Hello World!'))
 io.on('connection', async (socket) => {
   console.log('a user connected');
   // join
-  socket.on("join", async ({token, userId}) => {
+  socket.on("join", async ({token, userIds}) => {
     const verified = jwt.verify(token, process.env.TOKEN_SECRET || "super_cool_secret");
-    const unique = [verified._id.toString(), userId.toString()].sort((a, b) => (a < b ? -1 : 1));
-    const roomId = `${unique[0]}-${unique[1]}`;
-    socket.join(roomId);
+    const rooms = [];
+    for (let userId of userIds) {
+      const unique = [verified._id.toString(), userId.toString()].sort((a, b) => (a < b ? -1 : 1));
+      const roomId = `${unique[0]}-${unique[1]}`;
+      rooms.push(roomId);
+    }
+    socket.join(rooms);
     socket.emit("join-response", {
       status: 1,
-      message: `Join room ${roomId} thành công`,
+      message: `Join room thành công`,
     })
   })
   // matching
@@ -99,18 +103,18 @@ io.on('connection', async (socket) => {
       return;
     }
     if (user) {
-      if (user.matched_list.includes(userId)) {
+      if (user.matched_list.findIndex(item => item._id.toString() === userId.toString()) !== -1) {
         socket.emit("like-user-response", {
           status: 0,
           message: "Đã thích người này"
         })
         return;
-      } 
+      }
       await User.findByIdAndUpdate(verified._id, {matched_list: [
         ...user.matched_list,
         verifiedTargetUser
       ]})
-      if (targetUser.matched_list.includes(verified._id)) {
+      if (targetUser.matched_list.findIndex(item => item._id.toString() === verified._id.toString()) !== -1) {
         await User.findByIdAndUpdate(verified._id, {matching_list: [
           ...user.matching_list,
           verifiedTargetUser

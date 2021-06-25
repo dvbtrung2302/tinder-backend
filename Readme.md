@@ -105,7 +105,7 @@ HEADER: {
 ```bash
 SOCKET: socket.emit("join", {
   token: "abcxyz",
-  userId: "abcxyz",
+  userIds: ["abcxyz"],
 })
 ```
 ## Chat
@@ -138,5 +138,12 @@ HEADER: {
 BODY: {
   "lat": "10.823099",
   "lng": "106.629662"
+}
+```
+## Get Can Matching List
+```bash
+GET: /api/user/can-matching-list
+HEADER: {
+  Authorization: "Bearer ${token}"
 }
 ```
