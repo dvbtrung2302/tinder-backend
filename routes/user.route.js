@@ -12,10 +12,14 @@ router.post('/login', controller.login);
 
 router.put('/update', middleware.verifyToken, controller.update);
 
+router.post('/update-coordinates', middleware.verifyToken, controller.updateCoordinates);
+
 router.post('/upload-avatar', middleware.verifyToken, controller.uploadAvatar)
 
 router.post('/upload-photos', middleware.verifyToken, controller.uploadPhoto);
 
 router.post('/delete-photo', middleware.verifyToken, controller.deletePhoto);
+
+router.get('/can-matching-list', middleware.verifyToken, controller.getCanMatchingList);
 
 module.exports = router;

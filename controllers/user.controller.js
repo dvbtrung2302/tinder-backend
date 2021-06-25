@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const cloudinary = require('cloudinary').v2;
 const multiparty = require('multiparty');
 const Chat = require('../models/chat.model');
+const Hobby = require('../models/hobby.model');
+const calcCrow = require('../utils/functions');
 
 module.exports.index = async (req, res) => {
   try {
@@ -34,9 +36,20 @@ module.exports.signup = async (req, res) => {
     username,
     password,
     full_name,
-    confirmPassword
+    address,
+    confirmPassword,
+    lat,
+    lng
   } = req.body;
-  if (!username || !password || !full_name || !confirmPassword) {
+  if (
+    !username || 
+    !password || 
+    !full_name || 
+    !confirmPassword || 
+    !address || 
+    !lat ||
+    !lng
+  ) {
     return res.json({
       status: 0,
       message: "Thiếu thông tin"
@@ -67,6 +80,12 @@ module.exports.signup = async (req, res) => {
   const user = new User({
     username,
     full_name,
+    address,
+    area: 2,
+    coordinates: {
+      lat,
+      lng,
+    },
     password: hashPassword,
   })
 
@@ -88,8 +107,21 @@ module.exports.login = async (req, res) => {
   try {
     const {
       username, 
-      password
+      password,
+      lat,
+      lng
     } = req.body;
+    if (
+      !username || 
+      !password || 
+      !lat ||
+      !lng
+    ) {
+      return res.json({
+        status: 0,
+        message: "Thiếu thông tin"
+      });
+    }
     const user = await User.findOne({ username });
     if (!user) {
       return res.json({
@@ -105,20 +137,13 @@ module.exports.login = async (req, res) => {
       });
     }
     const token = jwt.sign({_id: user._id}, process.env.TOKEN_SECRET || "super_cool_secret", {});
-    const users = await User.find({});
-    
-    const canMatchingList = users
-    .map(item => {
-      const tempItem = { ...item._doc }
-      delete tempItem.password;
-      return tempItem
-    })
-    .filter(item => item._id.toString() !== user._id.toString());
-    let filtedCanMatchingList = canMatchingList;
-    if (user.matching_list && user.matching_list.length) {
-      filtedCanMatchingList = canMatchingList.filter(({_id}) => !user.matching_list.find((element) => element.toString() === _id.toString()));
+    const postData = {
+      coordinates: {
+        lat,
+        lng
+      }
     }
-
+    await User.findByIdAndUpdate(user._id, postData, {new: true});
 
     const returnedUser = { ...user._doc };
     delete returnedUser.password;
@@ -126,10 +151,7 @@ module.exports.login = async (req, res) => {
     return res.json({
       status: 1,
       token,
-      user: {
-        ...returnedUser,
-        can_matching_list: filtedCanMatchingList
-      },
+      user: returnedUser,
     })
   } catch (error) {
     console.log(error);
@@ -161,6 +183,8 @@ module.exports.update = async (req, res) => {
       return;
     }
     const user = await User.findById(req.user._id);
+    const hobbiesList = await Hobby.find({});
+    const returnedHobbies =  hobbiesList.filter(({_id}) => hobbies.find((element) => (element && element.toString()) === _id.toString()))
     const postData = {
       email: email || user.email,
       phone: phone || user.phone,
@@ -169,7 +193,7 @@ module.exports.update = async (req, res) => {
       gender: (gender !== undefined && gender !== null) ? parseInt(gender) : user.gender,
       address: address || user.address,
       bio: bio || user.bio,
-      hobbies: hobbies || user.hobbies
+      hobbies: returnedHobbies || user.hobbies
     }
     const result = await User.findByIdAndUpdate(req.user._id, postData, {new: true});
     const returnedUser = { ...result._doc };
@@ -183,10 +207,47 @@ module.exports.update = async (req, res) => {
       }
     })
   } catch (err) {
-    console.log(err);
     res.json({
       status: 0,
       message: "Cập nhật tài khoản thất bại",
+    })
+  }
+}
+
+module.exports.updateCoordinates = async (req, res) => {
+  try {
+    const {
+      lat,
+      lng
+    } = req.body;
+   
+    if (!lat || ! lng) {
+      return res.json({
+        status: 0,
+        message: "Thiếu thông tin"
+      })
+    }
+    const postData = {
+      coordinates: {
+        lat,
+        lng
+      }
+    }
+    const result = await User.findByIdAndUpdate(req.user._id, postData, {new: true});
+    const returnedUser = { ...result._doc };
+    delete returnedUser.password;
+    res.json({
+      status: 1,
+      message: "Cập nhật tọa độ thành công",
+      data: {
+        ...returnedUser,
+        ...postData
+      }
+    })
+  } catch (err) {
+    res.json({
+      status: 0,
+      message: "Cập nhật tọa độ thất bại",
     })
   }
 }
@@ -312,6 +373,51 @@ module.exports.deletePhoto = async (req, res) => {
     res.json({
       status: 0,
       message: "Xóa ảnh thất bại",
+    })
+  }
+}
+
+module.exports.getCanMatchingList = async (req, res) => {
+  try {
+    const users = await User.find({});
+    const user = await User.findById(req.user._id);
+    const canMatchingList = users
+      .map(item => {
+        const tempItem = { ...item._doc }
+        delete tempItem.password;
+        return tempItem
+      })
+      .filter(item => (
+        item.gender !== user.gender && 
+        item._id.toString() !== user._id.toString() &&
+        calcCrow(
+          item.coordinates.lat, 
+          item.coordinates.lng, 
+          user.coordinates.lat,
+          user.coordinates.lng,
+        ) <= parseInt(user.area)
+      ));
+    const returnedMatchingList = [];
+    if (canMatchingList && canMatchingList.length) {
+      for (let hobby of user.hobbies) {
+        for (let user of canMatchingList) {
+          const index = user.hobbies.findIndex(item => item._id.toString() === hobby._id.toString())
+          if (index !== -1) {
+            returnedMatchingList.push(user)
+          }
+        }
+      }
+    }
+
+    return res.json({
+      status: 1,
+      data: returnedMatchingList
+    })
+  } catch (error) {
+    console.log(error);
+    res.json({
+      status: 0,
+      message: "Lỗi không xác định"
     })
   }
 }

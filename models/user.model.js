@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
   area: Number,
   bio: String,
   address: String,
+  coordinates: Object,
   matching_list: Array,
   matched_list: Array,
 });

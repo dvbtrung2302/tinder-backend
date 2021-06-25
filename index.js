@@ -87,6 +87,10 @@ io.on('connection', async (socket) => {
     const verified = jwt.verify(token, process.env.TOKEN_SECRET || "super_cool_secret");
     const user = await User.findById(verified._id);
     const targetUser = await User.findById(userId);
+    const verifiedUser = { ...user._doc };
+    const verifiedTargetUser = { ...targetUser._doc };
+    delete verifiedUser.password;
+    delete verifiedTargetUser.password;
     if (!targetUser) {
       socket.emit("like-user-response", {
         status: 0,
@@ -104,13 +108,9 @@ io.on('connection', async (socket) => {
       } 
       await User.findByIdAndUpdate(verified._id, {matched_list: [
         ...user.matched_list,
-        userId
+        verifiedTargetUser
       ]})
       if (targetUser.matched_list.includes(verified._id)) {
-        const verifiedUser = { ...user._doc };
-        const verifiedTargetUser = { ...targetUser._doc };
-        delete verifiedUser.password;
-        delete verifiedTargetUser.password;
         await User.findByIdAndUpdate(verified._id, {matching_list: [
           ...user.matching_list,
           verifiedTargetUser

@@ -9,7 +9,10 @@ BODY: {
   "username": "abcxyz",
   "password": "123456",
   "full_name": "abcxyz",
-  "confirmPassword": "123456"
+  "confirmPassword": "123456",
+  "address": "abcxyz",
+  "lat": "10.823099",
+  "lng": "106.629662"
 }
 ```
 ## Login
@@ -18,6 +21,8 @@ POST: /api/user/login
 BODY: {
   "username": "abcxyz",
   "password": "123456",
+  "lat": "10.823099",
+  "lng": "106.629662"
 }
 ```
 ## Get profile
@@ -121,5 +126,17 @@ SOCKET: socket.on("send-message-response", (data) => {})
 GET: /api/hobby
 HEADER: {
   Authorization: "Bearer ${token}"
+}
+```
+
+## Update Coordinates
+```bash
+POST: /api/user/update-coordinates
+HEADER: {
+  Authorization: "Bearer ${token}"
+}
+BODY: {
+  "lat": "10.823099",
+  "lng": "106.629662"
 }
 ```
