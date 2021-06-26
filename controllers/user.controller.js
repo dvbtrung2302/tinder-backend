@@ -70,7 +70,7 @@ module.exports.signup = async (req, res) => {
     !address || 
     !lat ||
     !lng ||
-    !gender
+    gender === null
   ) {
     return res.json({
       status: 0,
