@@ -103,12 +103,7 @@ io.on('connection', async (socket) => {
         ...user.matched_list,
         verifiedTargetUser
       ]})
-      if (!targetUser.user_liked_you.includes(verified._id.toString())) {
-        await User.findByIdAndUpdate(userId, {user_liked_you: [
-          ...targetUser.user_liked_you,
-          verified._id
-        ]})
-      }
+
 
       if (targetUser.matched_list.findIndex(item => item._id.toString() === verified._id.toString()) !== -1) {
         await User.findByIdAndUpdate(verified._id, {matching_list: [
@@ -119,6 +114,12 @@ io.on('connection', async (socket) => {
           ...targetUser.matching_list,
           verifiedUser
         ]}) 
+        if (targetUser.user_liked_you.includes(verified._id.toString())) {
+          const new_user_liked_you = [...targetUser.user_liked_you];
+          const index = new_user_liked_you.indexOf(verified._id.toString())
+          new_user_liked_you.splice(index, 1);
+          await User.findByIdAndUpdate(userId, {user_liked_you: new_user_liked_you})
+        }
         const unique = [verified._id.toString(), userId.toString()].sort((a, b) => (a < b ? -1 : 1));
         const roomId = `${unique[0]}-${unique[1]}`;
         socket.join(roomId);
@@ -184,6 +185,12 @@ io.on('connection', async (socket) => {
         const unique = [verified._id.toString(), userId.toString()].sort((a, b) => (a < b ? -1 : 1));
         const roomId = `${unique[0]}-${unique[1]}`;
         socket.join(roomId);
+        if (!targetUser.user_liked_you.includes(verified._id.toString())) {
+          await User.findByIdAndUpdate(userId, {user_liked_you: [
+            ...targetUser.user_liked_you,
+            verified._id
+          ]})
+        }
       }
       socket.emit("like-user-response", {
         status: 1,
