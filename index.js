@@ -242,10 +242,8 @@ io.on('connection', async (socket) => {
     })
     await data.save();
     const matchingList = await Promise.all([...verifiedTargetUser.matching_list].map(async (item) => {
-      const unique = [userId.toString(), item._id.toString()].sort((a, b) => (a < b ? -1 : 1));
-      const roomId = `${unique[0]}-${unique[1]}`;
-      const message = await Chat.findOne({room_id: roomId});
-      if (message) {
+      
+      if (verified._id.toString() === item._id.toString()) {
         return {
           ...item,
           had_message: true
