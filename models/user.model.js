@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema({
   coordinates: Object,
   matching_list: Array,
   matched_list: Array,
+  user_liked_you: Array
 });
 
 const User = mongoose.model('User', userSchema);

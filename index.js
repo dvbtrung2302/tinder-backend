@@ -103,6 +103,13 @@ io.on('connection', async (socket) => {
         ...user.matched_list,
         verifiedTargetUser
       ]})
+      if (!targetUser.user_liked_you.includes(verified._id.toString())) {
+        await User.findByIdAndUpdate(userId, {user_liked_you: [
+          ...user.user_liked_you,
+          verified._id
+        ]})
+      }
+
       if (targetUser.matched_list.findIndex(item => item._id.toString() === verified._id.toString()) !== -1) {
         await User.findByIdAndUpdate(verified._id, {matching_list: [
           ...user.matching_list,
@@ -138,7 +145,15 @@ io.on('connection', async (socket) => {
         const roomId = `${unique[0]}-${unique[1]}`;
         socket.join(roomId);
       }
-      
+      socket.broadcast.to(roomId).emit("like-user-response", {
+        status: 1,
+        message: "Đã có người thích bạn",
+        data: [
+          ...user.user_liked_you,
+          verified._id
+        ]
+      })
+
       socket.emit("like-user-response", {
         status: 1,
         message: "Thích người này thành công"
