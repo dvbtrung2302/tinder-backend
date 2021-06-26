@@ -108,12 +108,14 @@ module.exports.login = async (req, res) => {
     const {
       username, 
       password,
+      address,
       lat,
       lng
     } = req.body;
     if (
       !username || 
       !password || 
+      !address ||
       !lat ||
       !lng
     ) {
@@ -138,6 +140,7 @@ module.exports.login = async (req, res) => {
     }
     const token = jwt.sign({_id: user._id}, process.env.TOKEN_SECRET || "super_cool_secret", {});
     const postData = {
+      address,
       coordinates: {
         lat,
         lng
@@ -172,7 +175,6 @@ module.exports.update = async (req, res) => {
       area,
       gender,
       hobbies,
-      address,
       bio
     } = data;
     if (gender !== null && gender !== undefined && parseInt(gender) !== 1 && parseInt(gender)!== 0) {
@@ -184,14 +186,16 @@ module.exports.update = async (req, res) => {
     }
     const user = await User.findById(req.user._id);
     const hobbiesList = await Hobby.find({});
-    const returnedHobbies =  hobbiesList.filter(({_id}) => hobbies.find((element) => (element && element.toString()) === _id.toString()))
+    let returnedHobbies = []
+    if (hobbies && hobbies.length) {
+      returnedHobbies = hobbiesList.filter(({_id}) => hobbies.find((element) => (element && element.toString()) === _id.toString()))
+    }
     const postData = {
       email: email || user.email,
       phone: phone || user.phone,
       full_name: full_name || user.full_name,
       area: (area !== undefined && area !== null) ? parseInt(area) : user.area,
       gender: (gender !== undefined && gender !== null) ? parseInt(gender) : user.gender,
-      address: address || user.address,
       bio: bio || user.bio,
       hobbies: returnedHobbies || user.hobbies
     }
@@ -207,6 +211,7 @@ module.exports.update = async (req, res) => {
       }
     })
   } catch (err) {
+    console.log(err);
     res.json({
       status: 0,
       message: "Cập nhật tài khoản thất bại",
