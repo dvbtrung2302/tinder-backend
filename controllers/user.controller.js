@@ -420,13 +420,15 @@ module.exports.getCanMatchingList = async (req, res) => {
           user.coordinates.lng,
         ) <= parseInt(user.area)
       ));
-    let returnedMatchingList = [];
+    let returnedMatchingList = canMatchingList;
+    if (user.matched_list && user.matched_list.length) {
+      returnedMatchingList = canMatchingList.filter(({_id}) => !user.matched_list.find((element) => element._id.toString() === _id.toString()));
+    }
+    
     const notMatchHobbies = [];
     if (canMatchingList && canMatchingList.length) {
       for (let canMatchingUser of canMatchingList) {
-        if (!canMatchingUser.hobbies || !canMatchingUser.hobbies.length) {
-          returnedMatchingList = canMatchingList
-        } else {
+        if (canMatchingUser.hobbies && canMatchingUser.hobbies.length) {
           for (let hobby of canMatchingUser.hobbies) {
             const index = user.hobbies.findIndex(item => item._id.toString() === hobby._id.toString())
             if (index !== -1) {
