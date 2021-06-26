@@ -185,7 +185,7 @@ io.on('connection', async (socket) => {
     await data.save();
     socket.broadcast.to(roomId).emit("send-message-response", {
       status: 1,
-      message: "Nhắn tin thành công",
+      message: "Có tin nhắn mới",
       data: data
     })
   })
