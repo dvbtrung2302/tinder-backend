@@ -81,7 +81,7 @@ module.exports.signup = async (req, res) => {
     username,
     full_name,
     address,
-    area: 2,
+    area: 100,
     coordinates: {
       lat,
       lng,
@@ -398,13 +398,15 @@ module.exports.getCanMatchingList = async (req, res) => {
         ) <= parseInt(user.area)
       ));
     const returnedMatchingList = [];
+    const notMatchHobbies = []
     if (canMatchingList && canMatchingList.length) {
       for (let canMatchingUser of canMatchingList) {
         for (let hobby of canMatchingUser.hobbies) {
           const index = user.hobbies.findIndex(item => item._id.toString() === hobby._id.toString())
           if (index !== -1) {
             returnedMatchingList.push(canMatchingUser);
-            break;
+          } else {
+            notMatchHobbies.push(canMatchingUser);
           }
         }
       }
@@ -412,7 +414,10 @@ module.exports.getCanMatchingList = async (req, res) => {
 
     return res.json({
       status: 1,
-      data: returnedMatchingList
+      data: [
+        ...returnedMatchingList,
+        ...notMatchHobbies
+      ]
     })
   } catch (error) {
     console.log(error);
