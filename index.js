@@ -183,7 +183,7 @@ io.on('connection', async (socket) => {
       room_id: roomId
     })
     await data.save();
-    io.sockets.in(roomId).emit("send-message-response", {
+    socket.broadcast.to(roomId).emit("send-message-response", {
       status: 1,
       message: "Nhắn tin thành công",
       data: data
