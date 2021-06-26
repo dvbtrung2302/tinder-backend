@@ -16,12 +16,32 @@ module.exports.index = async (req, res) => {
         message: "Không tìm thấy người dùng"
       });
     }
+    const returnedMatchingList = await Promise.all([...user.matching_list].map(async (item) => {
+      const unique = [user._id.toString(), item._id.toString()].sort((a, b) => (a < b ? -1 : 1));
+      const roomId = `${unique[0]}-${unique[1]}`;
+      const message = await Chat.findOne({room_id: roomId});
+
+      if (message) {
+        return {
+          ...item,
+          had_message: true
+        }
+      } else {
+        return {
+          ...item,
+          had_message: false
+        }
+      }
+    }))
     const returnedUser = { ...user._doc };
     delete returnedUser.password;
     res.json({
       status: 1,
       message: "Thành công",
-      data: returnedUser
+      data: {
+        ...returnedUser,
+        matching_list: returnedMatchingList
+      }
     });
   } catch (error) {
     return res.json({
