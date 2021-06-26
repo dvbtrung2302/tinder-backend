@@ -249,10 +249,7 @@ io.on('connection', async (socket) => {
           had_message: true
         }
       } else {
-        return {
-          ...item,
-          had_message: false
-        }
+        return item
       }
     }))
     socket.broadcast.to(roomId).emit("send-message-response", {
