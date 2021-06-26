@@ -39,7 +39,8 @@ module.exports.signup = async (req, res) => {
     address,
     confirmPassword,
     lat,
-    lng
+    lng,
+    gender
   } = req.body;
   if (
     !username || 
@@ -48,12 +49,20 @@ module.exports.signup = async (req, res) => {
     !confirmPassword || 
     !address || 
     !lat ||
-    !lng
+    !lng ||
+    !gender
   ) {
     return res.json({
       status: 0,
       message: "Thiếu thông tin"
     });
+  }
+  if (gender !== null && gender !== undefined && parseInt(gender) !== 1 && parseInt(gender)!== 0) {
+    res.json({
+      status: 0,
+      message: "Giới tính không hợp lệ"
+    })
+    return;
   }
   const usernameExist = await User.findOne({ username, username });
   if (username.length < 6 || password.length < 6) {
@@ -82,6 +91,7 @@ module.exports.signup = async (req, res) => {
     full_name,
     address,
     area: 100,
+    gender,
     coordinates: {
       lat,
       lng,
@@ -390,7 +400,15 @@ module.exports.getCanMatchingList = async (req, res) => {
       .map(item => {
         const tempItem = { ...item._doc }
         delete tempItem.password;
-        return tempItem
+        return {
+          ...tempItem,
+          km: calcCrow(
+            item.coordinates.lat, 
+            item.coordinates.lng, 
+            user.coordinates.lat,
+            user.coordinates.lng,
+          )
+        }
       })
       .filter(item => (
         item.gender !== user.gender && 
@@ -402,16 +420,20 @@ module.exports.getCanMatchingList = async (req, res) => {
           user.coordinates.lng,
         ) <= parseInt(user.area)
       ));
-    const returnedMatchingList = [];
-    const notMatchHobbies = []
+    let returnedMatchingList = [];
+    const notMatchHobbies = [];
     if (canMatchingList && canMatchingList.length) {
       for (let canMatchingUser of canMatchingList) {
-        for (let hobby of canMatchingUser.hobbies) {
-          const index = user.hobbies.findIndex(item => item._id.toString() === hobby._id.toString())
-          if (index !== -1) {
-            returnedMatchingList.push(canMatchingUser);
-          } else {
-            notMatchHobbies.push(canMatchingUser);
+        if (!canMatchingUser.hobbies || !canMatchingUser.hobbies.length) {
+          returnedMatchingList = canMatchingList
+        } else {
+          for (let hobby of canMatchingUser.hobbies) {
+            const index = user.hobbies.findIndex(item => item._id.toString() === hobby._id.toString())
+            if (index !== -1) {
+              returnedMatchingList.push(canMatchingUser);
+            } else {
+              notMatchHobbies.push(canMatchingUser);
+            }
           }
         }
       }
@@ -425,7 +447,6 @@ module.exports.getCanMatchingList = async (req, res) => {
       ]
     })
   } catch (error) {
-    console.log(error);
     res.json({
       status: 0,
       message: "Lỗi không xác định"
