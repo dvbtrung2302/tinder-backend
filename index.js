@@ -105,7 +105,7 @@ io.on('connection', async (socket) => {
       ]})
       if (!targetUser.user_liked_you.includes(verified._id.toString())) {
         await User.findByIdAndUpdate(userId, {user_liked_you: [
-          ...user.user_liked_you,
+          ...targetUser.user_liked_you,
           verified._id
         ]})
       }
