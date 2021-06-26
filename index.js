@@ -256,7 +256,7 @@ io.on('connection', async (socket) => {
       status: 1,
       message: "Có tin nhắn mới",
       data: data,
-      can_matching_list: matchingList
+      matching_list: matchingList
     })
   })
   // disconnect
