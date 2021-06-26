@@ -145,18 +145,18 @@ io.on('connection', async (socket) => {
         const roomId = `${unique[0]}-${unique[1]}`;
         socket.join(roomId);
       }
-      socket.broadcast.to(roomId).emit("like-user-response", {
+      socket.emit("like-user-response", {
+        status: 1,
+        message: "Thích người này thành công"
+      })
+      socket.broadcast.emit("like-user-response", {
         status: 1,
         message: "Đã có người thích bạn",
+        user_id: userId,
         data: [
           ...user.user_liked_you,
           verified._id
         ]
-      })
-
-      socket.emit("like-user-response", {
-        status: 1,
-        message: "Thích người này thành công"
       })
     }
   })
