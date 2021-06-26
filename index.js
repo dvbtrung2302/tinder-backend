@@ -123,20 +123,60 @@ io.on('connection', async (socket) => {
         const roomId = `${unique[0]}-${unique[1]}`;
         socket.join(roomId);
 
+        const matchingList_1 = await Promise.all([...user.matching_list].map(async (item) => {
+          const unique = [verified._id.toString(), item._id.toString()].sort((a, b) => (a < b ? -1 : 1));
+          const roomId = `${unique[0]}-${unique[1]}`;
+          const message = await Chat.findOne({room_id: roomId});
+          if (message) {
+            return {
+              ...item,
+              had_message: true
+            }
+          } else {
+            return {
+              ...item,
+              had_message: false
+            }
+          }
+        }))
+
+        const matchingList_2 = await Promise.all([...targetUser.matching_list].map(async (item) => {
+          const unique = [userId.toString(), item._id.toString()].sort((a, b) => (a < b ? -1 : 1));
+          const roomId = `${unique[0]}-${unique[1]}`;
+          const message = await Chat.findOne({room_id: roomId});
+          if (message) {
+            return {
+              ...item,
+              had_message: true
+            }
+          } else {
+            return {
+              ...item,
+              had_message: false
+            }
+          }
+        }))
+
         socket.emit("like-user-response", {
           status: 1,
           message: "Đã tìm thấy người phù hợp",
           data: [
-            ...user.matching_list,
-            verifiedTargetUser
+            ...matchingList_1,
+            {...
+              verifiedTargetUser,
+              had_message: false
+            }
           ]
         })
         socket.broadcast.to(roomId).emit("like-user-response", {
           status: 1,
           message: "Đã tìm thấy người phù hợp",
           data: [
-            ...targetUser.matching_list,
-            verifiedUser
+            ...matchingList_2,
+            {
+              ...verifiedUser,
+              had_message: false
+            }
           ]
         })
         return;

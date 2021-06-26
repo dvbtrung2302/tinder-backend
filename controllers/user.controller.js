@@ -157,12 +157,13 @@ module.exports.login = async (req, res) => {
       }
     }
     await User.findByIdAndUpdate(user._id, postData, {new: true});
-    const messages = await Chat.find({});
 
-    const returnedMatchingList = [...user.matching_list].map(item => {
+    const returnedMatchingList = await Promise.all([...user.matching_list].map(async (item) => {
       const unique = [user._id.toString(), item._id.toString()].sort((a, b) => (a < b ? -1 : 1));
       const roomId = `${unique[0]}-${unique[1]}`;
-      if (messages.findIndex(msg => msg.room_id === roomId) !== -1) {
+      const message = await Chat.findOne({room_id: roomId});
+
+      if (message) {
         return {
           ...item,
           had_message: true
@@ -173,7 +174,7 @@ module.exports.login = async (req, res) => {
           had_message: false
         }
       }
-    })
+    }))
     const returnedUser = { ...user._doc };
     delete returnedUser.password;
 
