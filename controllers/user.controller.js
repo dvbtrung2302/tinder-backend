@@ -439,6 +439,10 @@ module.exports.deletePhoto = async (req, res) => {
   }
 }
 
+function findCommonElements3(arr1, arr2) {
+  return arr1.some(item => arr2.findIndex(item2 => item2._id.toString() === item._id.toString()) !== -1)
+}
+
 module.exports.getCanMatchingList = async (req, res) => {
   try {
     const users = await User.find({});
@@ -467,23 +471,23 @@ module.exports.getCanMatchingList = async (req, res) => {
           user.coordinates.lng,
         ) <= parseInt(user.area)
       ));
-    let returnedMatchingList = canMatchingList;
+    let filtedMatchingList = canMatchingList;
     if (user.matched_list && user.matched_list.length) {
-      returnedMatchingList = canMatchingList.filter(({_id}) => !user.matched_list.find((element) => element._id.toString() === _id.toString()));
+      filtedMatchingList = canMatchingList.filter(({_id}) => !user.matched_list.find((element) => element._id.toString() === _id.toString()));
     }
     
+    const returnedMatchingList = [];
     const notMatchHobbies = [];
-    if (canMatchingList && canMatchingList.length) {
-      for (let canMatchingUser of canMatchingList) {
+    if (filtedMatchingList && filtedMatchingList.length) {
+      for (let canMatchingUser of filtedMatchingList) {
         if (canMatchingUser.hobbies && canMatchingUser.hobbies.length) {
-          for (let hobby of canMatchingUser.hobbies) {
-            const index = user.hobbies.findIndex(item => item._id.toString() === hobby._id.toString())
-            if (index !== -1) {
-              returnedMatchingList.push(canMatchingUser);
-            } else {
-              notMatchHobbies.push(canMatchingUser);
-            }
+          if(findCommonElements3(user.hobbies, canMatchingUser.hobbies)) {
+            returnedMatchingList.push(canMatchingUser);
+          } else {
+            notMatchHobbies.push(canMatchingUser)
           }
+        } else {
+          notMatchHobbies.push(canMatchingUser)
         }
       }
     }
@@ -496,6 +500,7 @@ module.exports.getCanMatchingList = async (req, res) => {
       ]
     })
   } catch (error) {
+    console.log(error);
     res.json({
       status: 0,
       message: "Lỗi không xác định"
