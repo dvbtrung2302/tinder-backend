@@ -19,7 +19,7 @@ module.exports.index = async (req, res) => {
     const returnedMatchingList = await Promise.all([...user.matching_list].map(async (item) => {
       const unique = [user._id.toString(), item._id.toString()].sort((a, b) => (a < b ? -1 : 1));
       const roomId = `${unique[0]}-${unique[1]}`;
-      const message = await Chat.findOne({room_id: roomId});
+      const message = await Chat.findOne({room_id: roomId}, {}, {sort: { 'created_at' : -1 }});
 
       if (message) {
         return {
@@ -182,7 +182,7 @@ module.exports.login = async (req, res) => {
     const returnedMatchingList = await Promise.all([...user.matching_list].map(async (item) => {
       const unique = [user._id.toString(), item._id.toString()].sort((a, b) => (a < b ? -1 : 1));
       const roomId = `${unique[0]}-${unique[1]}`;
-      const message = await Chat.findOne({room_id: roomId});
+      const message = await Chat.findOne({room_id: roomId}, {}, {sort: { 'created_at' : -1 }});
 
       if (message) {
         return {

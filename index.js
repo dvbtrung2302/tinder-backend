@@ -127,7 +127,7 @@ io.on('connection', async (socket) => {
         const matchingList_1 = await Promise.all([...user.matching_list].map(async (item) => {
           const unique = [verified._id.toString(), item._id.toString()].sort((a, b) => (a < b ? -1 : 1));
           const roomId = `${unique[0]}-${unique[1]}`;
-          const message = await Chat.findOne({room_id: roomId});
+          const message = await Chat.findOne({room_id: roomId}, {}, {sort: { 'created_at' : -1 }});
           if (message) {
             return {
               ...item,
@@ -145,7 +145,7 @@ io.on('connection', async (socket) => {
         const matchingList_2 = await Promise.all([...targetUser.matching_list].map(async (item) => {
           const unique = [userId.toString(), item._id.toString()].sort((a, b) => (a < b ? -1 : 1));
           const roomId = `${unique[0]}-${unique[1]}`;
-          const message = await Chat.findOne({room_id: roomId});
+          const message = await Chat.findOne({room_id: roomId}, {}, {sort: { 'created_at' : -1 }});
           if (message) {
             return {
               ...item,
