@@ -19,6 +19,7 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const User = require('./models/user.model');
 const Chat = require('./models/chat.model');
+
 const io = new Server(server, {
   cors: {
     origin: '*',
