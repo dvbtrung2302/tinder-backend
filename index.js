@@ -114,11 +114,11 @@ io.on('connection', async (socket) => {
           ...targetUser.matching_list,
           verifiedUser
         ]}) 
-        if (targetUser.user_liked_you.includes(verified._id.toString())) {
-          const new_user_liked_you = [...targetUser.user_liked_you];
-          const index = new_user_liked_you.indexOf(verified._id.toString())
+        if (verifiedUser.user_liked_you.includes(verifiedTargetUser._id.toString())) {
+          const new_user_liked_you = [...verifiedUser.user_liked_you];
+          const index = new_user_liked_you.indexOf(verifiedTargetUser._id.toString())
           new_user_liked_you.splice(index, 1);
-          await User.findByIdAndUpdate(userId, {user_liked_you: new_user_liked_you})
+          await User.findByIdAndUpdate(verified._id, {user_liked_you: new_user_liked_you})
         }
         const unique = [verified._id.toString(), userId.toString()].sort((a, b) => (a < b ? -1 : 1));
         const roomId = `${unique[0]}-${unique[1]}`;
