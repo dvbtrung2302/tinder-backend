@@ -131,7 +131,8 @@ io.on('connection', async (socket) => {
           if (message) {
             return {
               ...item,
-              had_message: true
+              had_message: true,
+              message
             }
           } else {
             return {
@@ -249,11 +250,11 @@ io.on('connection', async (socket) => {
     })
     await data.save();
     const matchingList = await Promise.all([...verifiedTargetUser.matching_list].map(async (item) => {
-      
       if (verified._id.toString() === item._id.toString()) {
         return {
           ...item,
-          had_message: true
+          had_message: true,
+          message: data
         }
       } else {
         return item
