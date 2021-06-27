@@ -246,6 +246,7 @@ io.on('connection', async (socket) => {
       message,
       created_at: new Date(),
       user_post: verifiedUser,
+      user_id: verifiedUser._id.toString(),
       room_id: roomId,
       is_seen: false
     })
@@ -294,7 +295,7 @@ io.on('connection', async (socket) => {
     
     const unique = [verified._id.toString(), userId.toString()].sort((a, b) => (a < b ? -1 : 1));
     const roomId = `${unique[0]}-${unique[1]}`;
-    const chat = await Chat.updateMany({ room_id: roomId }, { is_seen: true });
+    const chat = await Chat.updateMany({ room_id: roomId, user_id: userId }, { is_seen: true });
 
     const returnedMatchingList = await Promise.all([...verifiedUser.matching_list].map(async (item) => {
       const unique = [verifiedUser._id.toString(), item._id.toString()].sort((a, b) => (a < b ? -1 : 1));

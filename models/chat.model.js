@@ -4,6 +4,7 @@ const chatSchema = new mongoose.Schema({
   message: String,
   created_at: Date,
   user_post: Object,
+  user_id: String,
   room_id: String,
   is_seen: Boolean
 });
