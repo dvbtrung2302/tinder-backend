@@ -246,7 +246,8 @@ io.on('connection', async (socket) => {
       message,
       created_at: new Date(),
       user_post: verifiedUser,
-      room_id: roomId
+      room_id: roomId,
+      is_seen: false
     })
     await data.save();
     const matchingList = await Promise.all([...verifiedTargetUser.matching_list].map(async (item) => {
@@ -265,6 +266,58 @@ io.on('connection', async (socket) => {
       message: "Có tin nhắn mới",
       data: data,
       matching_list: matchingList
+    })
+  })
+  // seen 
+  socket.on("seen-message", async ({token, userId}) => { 
+    if (!token) {
+      socket.emit("send-message-response", {
+        status: 0,
+        message: "Thiếu token"
+      })
+      return;
+    }
+    if (!userId) {
+      socket.emit("send-message-response", {
+        status: 0,
+        message: "Thiếu UserId"
+      })
+      return;
+    }
+    const verified = jwt.verify(token, process.env.TOKEN_SECRET || "super_cool_secret");
+    const user = await User.findById(verified._id);
+    const targetUser = await User.findById(userId);
+    const verifiedUser = { ...user._doc };
+    const verifiedTargetUser = { ...targetUser._doc };
+    delete verifiedUser.password;
+    delete verifiedTargetUser.password;
+    
+    const unique = [verified._id.toString(), userId.toString()].sort((a, b) => (a < b ? -1 : 1));
+    const roomId = `${unique[0]}-${unique[1]}`;
+    const chat = await Chat.updateMany({ room_id: roomId }, { is_seen: true });
+
+    const returnedMatchingList = await Promise.all([...verifiedUser.matching_list].map(async (item) => {
+      const unique = [verifiedUser._id.toString(), item._id.toString()].sort((a, b) => (a < b ? -1 : 1));
+      const roomId = `${unique[0]}-${unique[1]}`;
+      const message = await Chat.findOne({room_id: roomId}, {}, {sort: { 'created_at' : -1 }});
+
+      if (message) {
+        return {
+          ...item,
+          had_message: true,
+          message
+        }
+      } else {
+        return {
+          ...item,
+          had_message: false,
+        }
+      }
+    }))
+    socket.emit("seen-message-response", {
+      status: 1,
+      message: "Xem tin nhắn thành công",
+      data: returnedMatchingList
     })
   })
   // disconnect
