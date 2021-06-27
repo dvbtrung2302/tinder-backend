@@ -187,7 +187,8 @@ module.exports.login = async (req, res) => {
       if (message) {
         return {
           ...item,
-          had_message: true
+          had_message: true,
+          message
         }
       } else {
         return {
