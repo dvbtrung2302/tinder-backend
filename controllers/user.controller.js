@@ -205,6 +205,11 @@ module.exports.login = async (req, res) => {
       token,
       user: {
         ...returnedUser,
+        address,
+        coordinates: {
+          lat,
+          lng
+        },
         matching_list: returnedMatchingList
       },
     })
